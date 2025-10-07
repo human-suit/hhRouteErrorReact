@@ -20,7 +20,7 @@ createRoot(document.getElementById('root')!).render(
           />
           <Route path="/vacancies/" element={<App />} />
           <Route path="/vacancies/:city" element={<App />} />
-          <Route path="/vacancies/:id" element={<VacancyPage />} />
+          <Route path="/vacancies/:city/:id" element={<VacancyPage />} />
           <Route path="*" element={<ErrorPage />} />
         </Routes>
       </BrowserRouter>
