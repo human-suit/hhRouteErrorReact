@@ -9,19 +9,26 @@ type SearchParams = {
 
 export const fetchVacancies = createAsyncThunk<Vacancy[], SearchParams>(
   'vacancies/fetchVacancies',
-  async ({ text, city = '', skills = [] }) => {
-    let query = `https://api.hh.ru/vacancies?industry=7&text=${encodeURIComponent(text)} `;
+  async ({ text = '', city = '', skills = [] }) => {
+    const cityToAreaId: Record<string, string> = {
+      Москва: '1',
+      'Санкт-Петербург': '2',
+    };
 
+    const areaId = cityToAreaId[city] ?? '';
+
+    let searchText = text.trim();
     if (skills.length) {
-      const skillQuery = skills.map((s) => encodeURIComponent(s)).join(' ');
-      query += `${skillQuery}`;
+      searchText = [searchText, ...skills].filter(Boolean).join(' ');
     }
-    if (city && city !== 'all') {
-      query += `&area=${city === 'Москва' ? 1 : city === 'Санкт-Петербург' ? 2 : ''}`;
-    }
+
+    let query = `https://api.hh.ru/vacancies?industry=7`;
+    if (searchText) query += `&text=${encodeURIComponent(searchText)}`;
+    if (areaId) query += `&area=${areaId}`;
 
     const res = await fetch(query);
     const data = await res.json();
+
     return data.items as Vacancy[];
   }
 );
@@ -54,7 +61,7 @@ const vacanciesSlice = createSlice({
       })
       .addCase(fetchVacancies.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message;
+        state.error = action.error.message ?? 'Неизвестная ошибка';
       });
   },
 });

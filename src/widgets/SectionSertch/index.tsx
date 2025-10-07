@@ -1,33 +1,46 @@
-// import { Logo } from '../../shared/ui';
 import style from './index.module.scss';
 import { Sertch } from '../../shared/assets/';
 import { fetchVacancies } from '@/features/modal/modalSlice';
 import { useAppDispatch, useAppSelector } from '@/hooks/useReduxHooks';
 import { setCity, setSearchText } from '@/features/modal/filtersSlice';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 
 export default function SectionSertch() {
   const dispatch = useAppDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { city: urlCity } = useParams<{ city?: string }>();
   const [text, setText] = useState('');
 
   const { city, skills, searchText } = useAppSelector((state) => state.filters);
 
   useEffect(() => {
-    dispatch(setSearchText(searchParams.get('text') ?? searchText));
-    dispatch(setCity(searchParams.get('city') ?? city));
-  }, [city, dispatch, searchParams, searchText]);
+    if (urlCity) {
+      const mappedCity = urlCity === 'moscow' ? 'Москва' : 'Санкт-Петербург';
+      if (mappedCity !== city) {
+        dispatch(setCity(mappedCity));
+      }
+    }
+  }, [urlCity, city, dispatch]);
+
+  useEffect(() => {
+    const urlText = searchParams.get('text') ?? '';
+    if (urlText !== searchText) {
+      dispatch(setSearchText(urlText));
+      setText(urlText);
+    }
+  }, [searchParams, searchText, dispatch]);
 
   const onSearch = () => {
     const params: { [key: string]: string | string[] } = {
       text: text,
-      city,
+      city: urlCity || '',
     };
     if (skills.length > 0) params.skills = skills;
 
     setSearchParams(params);
-    dispatch(fetchVacancies({ text: text, city, skills }));
+
+    dispatch(fetchVacancies({ text, city: city, skills }));
   };
 
   return (
@@ -44,9 +57,7 @@ export default function SectionSertch() {
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              onSearch();
-            }
+            if (e.key === 'Enter') onSearch();
           }}
         />
         <button onClick={onSearch}>Найти</button>

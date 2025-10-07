@@ -5,15 +5,24 @@ import { Vacancy } from '@/shared/types/vacancy';
 import { Header } from '@/widgets';
 
 export default function VacancyPage() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const [vacancy, setVacancy] = useState<Vacancy | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!id) return;
+    setLoading(true);
+
     fetch(`https://api.hh.ru/vacancies/${id}`)
       .then((res) => res.json())
-      .then(setVacancy);
+      .then((data) => {
+        setVacancy(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
   }, [id]);
 
+  if (loading) return <div>Загрузка...</div>;
   if (!vacancy) return <div>Загрузка...</div>;
 
   const cleanDescription = vacancy.description

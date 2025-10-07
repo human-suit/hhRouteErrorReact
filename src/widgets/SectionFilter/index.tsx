@@ -1,102 +1,100 @@
-import style from './index.module.scss';
-import { WhitePlus } from '@shared/assets/';
-import { useAppDispatch, useAppSelector } from '@/hooks/useReduxHooks';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { TextInput, Button } from '@mantine/core';
 import { addSkill, removeSkill } from '@/features/modal/filtersSlice';
 import { fetchVacancies } from '@/features/modal/modalSlice';
-// import { useNavigate } from 'react-router-dom';
+import { useAppDispatch } from '@/hooks/useReduxHooks';
+import type { RootState } from '@/app/store';
+import { useSearchParams, useParams } from 'react-router-dom';
+import style from './index.module.scss';
 
 export default function SectionFilter() {
   const dispatch = useAppDispatch();
-  const { city, skills, searchText } = useAppSelector((state) => state.filters);
+  const { skills, searchText } = useSelector(
+    (state: RootState) => state.filters
+  );
   const [skillInput, setSkillInput] = useState('');
 
-  // const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { city } = useParams<{ city?: string }>();
 
-  const handleAddSkill = () => {
-    const trimmedSkill = skillInput.trim();
-
-    if (trimmedSkill) {
-      dispatch(addSkill(trimmedSkill));
-
-      const updatedSkills = [...skills, trimmedSkill];
-
-      dispatch(
-        fetchVacancies({ city, skills: updatedSkills, text: searchText.trim() })
-      );
-      setSkillInput('');
-    }
+  const updateUrlParams = (newSkills = skills, newText = searchText) => {
+    const params = new URLSearchParams();
+    if (newText) params.set('q', newText.trim());
+    newSkills.forEach((s) => params.append('skills', s));
+    setSearchParams(params, { replace: true });
   };
 
-  // const handleAddCity = (selectedCity: string) => {
-  //   dispatch(setCity(selectedCity));
-  //   dispatch(
-  //     fetchVacancies({ city: selectedCity, skills, text: searchText.trim() })
-  //   );
+  useEffect(() => {
+    const hasAny =
+      searchParams.get('q') || searchParams.getAll('skills').length;
+    if (!hasAny) updateUrlParams();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  //   const path = cityToPath(selectedCity);
-  //   navigate(path ? `/vacancies/${path}` : '/vacancies');
-  // };
+  const handleAddSkill = () => {
+    const trimmed = skillInput.trim();
+    if (!trimmed) return;
+    const updatedSkills = [...skills, trimmed];
+    dispatch(addSkill(trimmed));
+    dispatch(
+      fetchVacancies({
+        city: city ?? undefined,
+        skills: updatedSkills,
+        text: searchText.trim(),
+      })
+    );
+    updateUrlParams(updatedSkills);
+    setSkillInput('');
+  };
 
-  console.log(city, skills, searchText);
-
-  // const cityToPath = (city: string) => {
-  //   switch (city) {
-  //     case 'Москва':
-  //       return 'moscow';
-  //     case 'Санкт-Петербург':
-  //       return 'petersburg';
-  //     case 'all':
-  //       return '';
-  //     default:
-  //       return '';
-  //   }
-  // };
+  const handleRemoveSkill = (skill: string) => {
+    const updatedSkills = skills.filter((s) => s !== skill);
+    dispatch(removeSkill(skill));
+    dispatch(
+      fetchVacancies({
+        city: city ?? '',
+        skills: updatedSkills,
+        text: searchText.trim(),
+      })
+    );
+    updateUrlParams(updatedSkills);
+  };
 
   return (
     <div className={style.sectionFilter}>
-      <div>
+      <div className={style.blockFilter}>
         <p>Ключевые навыки</p>
-        <input
-          type="text"
-          placeholder="Навык"
-          value={skillInput}
-          onChange={(e) => setSkillInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              handleAddSkill();
-            }
-          }}
-        />
-        <button onClick={handleAddSkill}>
-          <img src={WhitePlus} alt="plus" />
-        </button>
+
+        <div className={style.inputRow}>
+          <TextInput
+            className={style.input}
+            placeholder="Навык"
+            value={skillInput}
+            onChange={(e) => setSkillInput(e.currentTarget.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleAddSkill()}
+          />
+          <Button className={style.plusBtn} onClick={handleAddSkill}>
+            +
+          </Button>
+        </div>
 
         <div className={style.grid}>
           {skills.map((skill) => (
-            <span key={skill}>
+            <span key={skill} className={style.skill}>
               <p>{skill}</p>
-              <button onClick={() => dispatch(removeSkill(skill))}>✕</button>
+              <Button
+                variant="subtle"
+                size="xs"
+                className={style.deleteBtn}
+                onClick={() => handleRemoveSkill(skill)}
+              >
+                ✕
+              </Button>
             </span>
           ))}
         </div>
       </div>
-
-      {/* <div className={style.filterCity}>
-        <img src={locateIcon} alt="locate Icon" />
-        <select
-          id="city"
-          name="city"
-          value={city}
-          onChange={(e) => handleAddCity(e.target.value)}
-        >
-          <option value="">Выберите город:</option>
-          <option value="Москва">Москва</option>
-          <option value="Санкт-Петербург">Санкт-Петербург</option>
-          <option value="all">Все</option>
-        </select>
-      </div> */}
     </div>
   );
 }
