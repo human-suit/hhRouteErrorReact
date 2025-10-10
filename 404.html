@@ -1,15 +1,13 @@
 
 <!DOCTYPE html>
-<html>
+<html lang="ru">
   <head>
     <meta charset="utf-8" />
-    <title>Redirecting...</title>
-    <script>
-      // Сохраняем путь после /hhRouteErrorReact/
-      const redirectPath = window.location.pathname.replace('/hhRouteErrorReact', '');
-      // Редиректим на index.html с хэшем (чтобы React понял маршрут)
-      window.location.replace('/hhRouteErrorReact/#' + redirectPath);
-    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ошибка 404</title>
   </head>
-  <body>Redirecting...</body>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/hhRouteErrorReact/assets/index.js"></script>
+  </body>
 </html>
