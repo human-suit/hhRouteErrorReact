@@ -1,15 +1,15 @@
 
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <title>Redirecting...</title>
-  <script type="text/javascript">
-    var path = window.location.pathname;
-    window.location.replace("/hhRouteErrorReact/index.html#" + path);
-  </script>
-</head>
-<body>
-Redirecting...
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <title>Redirecting...</title>
+    <script>
+      // Сохраняем путь после /hhRouteErrorReact/
+      const redirectPath = window.location.pathname.replace('/hhRouteErrorReact', '');
+      // Редиректим на index.html с хэшем (чтобы React понял маршрут)
+      window.location.replace('/hhRouteErrorReact/#' + redirectPath);
+    </script>
+  </head>
+  <body>Redirecting...</body>
 </html>
