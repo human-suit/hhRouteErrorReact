@@ -24,10 +24,6 @@ function App() {
   const { skills, searchText } = useAppSelector((state) => state.filters);
 
   useEffect(() => {
-    if (!city) navigate('/vacancies/moscow', { replace: true });
-  }, [city, navigate]);
-
-  useEffect(() => {
     if (!city) return;
 
     const selectedCity =
